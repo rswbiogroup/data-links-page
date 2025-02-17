@@ -4,13 +4,74 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Административная панель</title>
-    <style> мне нужно чтобы когда вносил данные в адимн панеле чтобы они сохранялись и любой пользователь мог бы их видеть 
+    <style>
         body { font-family: Arial, sans-serif; text-align: center; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid black; padding: 10px; }
         th { background-color: #f2f2f2; }
         input, button { margin: 10px; padding: 5px; }
     </style>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
+            authDomain: "docs-3a3de.firebaseapp.com",
+            databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "docs-3a3de",
+            storageBucket: "docs-3a3de.firebasestorage.app",
+            messagingSenderId: "852859489033",
+            appId: "1:852859489033:web:f22190feea785d8e8461d8",
+            measurementId: "G-3L1HF1V8SB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
+
+        function loadTable() {
+            const table = document.getElementById('dataTable');
+            table.innerHTML = '';
+            const dataRef = ref(database, 'data');
+            onValue(dataRef, (snapshot) => {
+                table.innerHTML = '';
+                snapshot.forEach((childSnapshot) => {
+                    const item = childSnapshot.val();
+                    const row = `
+                        <tr>
+                            <td>${item.name}</td>
+                            <td><a href="${item.archive}" target="_blank">Скачать</a></td>
+                            <td><a href="${item.online}" target="_blank">Просмотр</a></td>
+                            <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
+                        </tr>`;
+                    table.innerHTML += row;
+                });
+            });
+        }
+
+        window.addRow = function() {
+            const name = document.getElementById('infoName').value;
+            const archive = document.getElementById('archiveLink').value;
+            const online = document.getElementById('onlineLink').value;
+            if (!name || !archive || !online) {
+                alert('Заполните все поля!');
+                return;
+            }
+            const dataRef = ref(database, 'data');
+            const newData = push(dataRef);
+            set(newData, { name, archive, online });
+            document.getElementById('infoName').value = '';
+            document.getElementById('archiveLink').value = '';
+            document.getElementById('onlineLink').value = '';
+        }
+
+        window.deleteRow = function(id) {
+            const dataRef = ref(database, 'data/' + id);
+            remove(dataRef);
+        }
+
+        window.onload = loadTable;
+    </script>
 </head>
 <body>
     <h2>Административная панель</h2>
@@ -18,7 +79,7 @@
     <input type="text" id="archiveLink" placeholder="Ссылка на архив">
     <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
     <button onclick="addRow()">Добавить</button>
-    
+
     <table>
         <thead>
             <tr>
@@ -28,54 +89,7 @@
                 <th>Действие</th>
             </tr>
         </thead>
-        <tbody id="dataTable">
-        </tbody>
+        <tbody id="dataTable"></tbody>
     </table>
-
-    <script>
-        function loadTable() {
-            let data = JSON.parse(localStorage.getItem('data')) || [];
-            let table = document.getElementById('dataTable');
-            table.innerHTML = '';
-            data.forEach((item, index) => {
-                let row = <tr>
-                    <td>${item.name}</td>
-                    <td><a href="${item.archive}" target="_blank">Скачать</a></td>
-                    <td><a href="${item.online}" target="_blank">Просмотр</a></td>
-                    <td><button onclick="deleteRow(${index})">Удалить</button></td>
-                </tr>;
-                table.innerHTML += row;
-            });
-        }
-
-        function addRow() {
-            let name = document.getElementById('infoName').value;
-            let archive = document.getElementById('archiveLink').value;
-            let online = document.getElementById('onlineLink').value;
-            
-            if (!name || !archive || !online) {
-                alert('Заполните все поля!');
-                return;
-            }
-            
-            let data = JSON.parse(localStorage.getItem('data')) || [];
-            data.push({ name, archive, online });
-            localStorage.setItem('data', JSON.stringify(data));
-            
-            document.getElementById('infoName').value = '';
-            document.getElementById('archiveLink').value = '';
-            document.getElementById('onlineLink').value = '';
-            
-            loadTable();
-        }
-
-        function deleteRow(index) {
-            let data = JSON.parse(localStorage.getItem('data')) || [];
-            data.splice(index, 1);
-            localStorage.setItem('data', JSON.stringify(data));
-            loadTable();
-        }
-        
-        window.onload = loadTable;
-    </script>
 </body>
+</html>
