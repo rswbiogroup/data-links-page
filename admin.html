@@ -32,8 +32,84 @@
         </tbody>
     </table>
 
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+<script type="module">
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+    import { getDatabase, ref, push, set, remove, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyCQ6yprlayQQ2QgsJ8OPBtN-LHSAjVLT6k",
+        authDomain: "adminconsole-9b608.firebaseapp.com",
+        databaseURL: "https://adminconsole-9b608-default-rtdb.firebaseio.com",
+        projectId: "adminconsole-9b608",
+        storageBucket: "adminconsole-9b608.firebasestorage.app",
+        messagingSenderId: "871383942468",
+        appId: "1:871383942468:web:c0de353864d94cb6948311",
+        measurementId: "G-6NVKE3XYZM"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+
+    function loadTable() {
+        const table = document.getElementById('dataTable');
+        table.innerHTML = '';
+        const dataRef = ref(database, 'data');
+
+        get(dataRef).then((snapshot) => {
+            const data = snapshot.val();
+            if (data) {
+                Object.values(data).forEach((item) => {
+                    const row = `
+                        <tr>
+                            <td>${item.name}</td>
+                            <td><a href="${item.archive}" target="_blank">Скачать</a></td>
+                            <td><a href="${item.online}" target="_blank">Просмотр</a></td>
+                            <td><button onclick="deleteRow('${item.id}')">Удалить</button></td>
+                        </tr>
+                    `;
+                    table.innerHTML += row;
+                });
+            }
+        });
+    }
+
+    function addRow() {
+        const name = document.getElementById('infoName').value;
+        const archive = document.getElementById('archiveLink').value;
+        const online = document.getElementById('onlineLink').value;
+
+        if (!name || !archive || !online) {
+            alert('Заполните все поля!');
+            return;
+        }
+
+        const newDataRef = push(ref(database, 'data'));
+        set(newDataRef, {
+            name: name,
+            archive: archive,
+            online: online,
+            id: newDataRef.key
+        }).then(() => {
+            alert('Данные добавлены!');
+            loadTable();
+        }).catch((error) => {
+            console.error('Ошибка:', error);
+        });
+    }
+
+    function deleteRow(id) {
+        const dataRef = ref(database, 'data/' + id);
+        remove(dataRef).then(() => {
+            alert('Данные удалены!');
+            loadTable();
+        }).catch((error) => {
+            console.error('Ошибка удаления:', error);
+        });
+    }
+
+    window.onload = loadTable;
+</script>
+
 
     <script>
         // Firebase configuration
