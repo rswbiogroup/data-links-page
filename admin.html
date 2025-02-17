@@ -1,185 +1,57 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Административная панель</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid black; padding: 10px; }
-        th { background-color: #f2f2f2; }
-        input, button { margin: 10px; padding: 5px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Firebase Realtime Database Demo</title>
 </head>
 <body>
-    <h2>Административная панель</h2>
-    <input type="text" id="infoName" placeholder="Маълумот номи">
-    <input type="text" id="archiveLink" placeholder="Ссылка на архив">
-    <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
-    <button onclick="addRow()">Добавить</button>
-    
-    <table>
-        <thead>
-            <tr>
-                <th>Маълумотлар номланиши</th>
-                <th>Архив (скачать)</th>
-                <th>Онлайн просмотр</th>
-                <th>Действие</th>
-            </tr>
-        </thead>
-        <tbody id="dataTable">
-        </tbody>
-    </table>
+  <h1>Firebase Realtime Database Demo</h1>
 
-<script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
-    import { getDatabase, ref, push, set, remove, get } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
+  <input type="text" id="dataInput" placeholder="Enter data" />
+  <button onclick="writeData()">Add Data</button>
 
-    const const firebaseConfig = {
-  apiKey: "AIzaSyAFWgRdr_38zJ0EYNe05uDiRGaWfZfXxp8",
-  authDomain: "links-to-documents.firebaseapp.com",
-  databaseURL: "https://links-to-documents-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "links-to-documents",
-  storageBucket: "links-to-documents.firebasestorage.app",
-  messagingSenderId: "394255462587",
-  appId: "1:394255462587:web:1db93b37995b040036b99e"
-};
-    
+  <div id="output"></div>
+
+  <script type="module">
+    // Import Firebase SDK
+    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
+    import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
+      authDomain: "docs-3a3de.firebaseapp.com",
+      databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "docs-3a3de",
+      storageBucket: "docs-3a3de.firebasestorage.app",
+      messagingSenderId: "852859489033",
+      appId: "1:852859489033:web:f22190feea785d8e8461d8",
+      measurementId: "G-3L1HF1V8SB"
+    };
+
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    function loadTable() {
-        const table = document.getElementById('dataTable');
-        table.innerHTML = '';
-        const dataRef = ref(database, 'data');
-
-        get(dataRef).then((snapshot) => {
-            const data = snapshot.val();
-            if (data) {
-                Object.values(data).forEach((item) => {
-                    const row = `
-                        <tr>
-                            <td>${item.name}</td>
-                            <td><a href="${item.archive}" target="_blank">Скачать</a></td>
-                            <td><a href="${item.online}" target="_blank">Просмотр</a></td>
-                            <td><button onclick="deleteRow('${item.id}')">Удалить</button></td>
-                        </tr>
-                    `;
-                    table.innerHTML += row;
-                });
-            }
+    window.writeData = function() {
+      const data = document.getElementById('dataInput').value;
+      if (data.trim() !== '') {
+        set(ref(database, 'data/' + Date.now()), {
+          value: data
         });
-    }
+      } else {
+        alert('Please enter some data');
+      }
+    };
 
-    function addRow() {
-        const name = document.getElementById('infoName').value;
-        const archive = document.getElementById('archiveLink').value;
-        const online = document.getElementById('onlineLink').value;
-
-        if (!name || !archive || !online) {
-            alert('Заполните все поля!');
-            return;
-        }
-
-        const newDataRef = push(ref(database, 'data'));
-        set(newDataRef, {
-            name: name,
-            archive: archive,
-            online: online,
-            id: newDataRef.key
-        }).then(() => {
-            alert('Данные добавлены!');
-            loadTable();
-        }).catch((error) => {
-            console.error('Ошибка:', error);
-        });
-    }
-
-    function deleteRow(id) {
-        const dataRef = ref(database, 'data/' + id);
-        remove(dataRef).then(() => {
-            alert('Данные удалены!');
-            loadTable();
-        }).catch((error) => {
-            console.error('Ошибка удаления:', error);
-        });
-    }
-
-    window.onload = loadTable;
-</script>
-
-
-    <script>
-        // Firebase configuration
-        const firebaseConfig = {
-            apiKey: "AIzaSyCQ6yprlayQQ2QgsJ8OPBtN-LHSAjVLT6k",
-            authDomain: "adminconsole-9b608.firebaseapp.com",
-            databaseURL: "https://adminconsole-9b608-default-rtdb.firebaseio.com",
-            projectId: "adminconsole-9b608",
-            storageBucket: "adminconsole-9b608.firebasestorage.app",
-            messagingSenderId: "871383942468",
-            appId: "1:871383942468:web:c0de353864d94cb6948311",
-            measurementId: "G-6NVKE3XYZM"
-        };
-
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
-
-        // Load data from Firebase Realtime Database
-        function loadTable() {
-            const table = document.getElementById('dataTable');
-            const dbRef = database.ref('data'); // Reference to the "data" node in the database
-
-            dbRef.on('value', (snapshot) => {
-                const data = snapshot.val();
-                table.innerHTML = ''; // Clear the table
-                for (let key in data) {
-                    let row = `<tr>
-                        <td>${data[key].name}</td>
-                        <td><a href="${data[key].archive}" target="_blank">Скачать</a></td>
-                        <td><a href="${data[key].online}" target="_blank">Просмотр</a></td>
-                        <td><button onclick="deleteRow('${key}')">Удалить</button></td>
-                    </tr>`;
-                    table.innerHTML += row;
-                }
-            });
-        }
-
-        // Add data to Firebase Realtime Database
-        function addRow() {
-            let name = document.getElementById('infoName').value;
-            let archive = document.getElementById('archiveLink').value;
-            let online = document.getElementById('onlineLink').value;
-            
-            if (!name || !archive || !online) {
-                alert('Заполните все поля!');
-                return;
-            }
-            
-            const newData = {
-                name: name,
-                archive: archive,
-                online: online
-            };
-
-            const dbRef = database.ref('data'); // Reference to the "data" node in the database
-            dbRef.push(newData); // Push new data to the database
-
-            document.getElementById('infoName').value = '';
-            document.getElementById('archiveLink').value = '';
-            document.getElementById('onlineLink').value = '';
-        }
-
-        // Delete data from Firebase Realtime Database
-        function deleteRow(key) {
-            const dbRef = database.ref('data/' + key); // Reference to the specific data node
-            dbRef.remove(); // Remove the data from the database
-        }
-
-        // Call loadTable when the page is loaded
-        window.onload = loadTable;
-    </script>
+    const dataRef = ref(database, 'data');
+    onValue(dataRef, (snapshot) => {
+      const output = document.getElementById('output');
+      output.innerHTML = '';
+      snapshot.forEach((childSnapshot) => {
+        const item = childSnapshot.val();
+        output.innerHTML += `<p>${item.value}</p>`;
+      });
+    });
+  </script>
 </body>
 </html>
