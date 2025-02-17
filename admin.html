@@ -8,27 +8,28 @@
 <body>
   <h1>Firebase Admin Panel</h1>
 
-  <input type="text" id="infoName" placeholder="Data Name" />
-  <input type="text" id="archiveLink" placeholder="Archive Link" />
-  <input type="text" id="onlineLink" placeholder="Online View Link" />
-  <button onclick="addRow()">Add Data</button>
+  <input type="text" id="infoName" placeholder="Маълумот номи" />
+  <input type="text" id="archiveLink" placeholder="Ссылка на архив" />
+  <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр" />
+  <button onclick="addRow()">Добавить</button>
 
-  <div id="output"></div>
+  <table border="1">
+    <thead>
+      <tr>
+        <th>Маълумотлар номланиши</th>
+        <th>Архив (скачать)</th>
+        <th>Онлайн просмотр</th>
+        <th>Действие</th>
+      </tr>
+    </thead>
+    <tbody id="dataTable"></tbody>
+  </table>
 
   <script type="module">
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
     import { getDatabase, ref, push, set, remove, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
-    const firebaseConfig = {
-      apiKey: "AIza...",
-      authDomain: "docs-3a3de.firebaseapp.com",
-      databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
-      projectId: "docs-3a3de",
-      storageBucket: "docs-3a3de.firebasestorage.app",
-      messagingSenderId: "852859489033",
-      appId: "1:852859489033:web:f22190feea785d8e8461d8",
-      measurementId: "G-3L1HF1V8SB"
-    };
+    const firebaseConfig = { /* вставьте ваш firebaseConfig сюда */ };
 
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
@@ -41,19 +42,28 @@
         const newRef = push(ref(database, 'data'));
         set(newRef, { name, archive, online });
       } else {
-        alert('Fill all fields!');
+        alert('Заполните все поля!');
       }
     };
 
     const dataRef = ref(database, 'data');
     onValue(dataRef, (snapshot) => {
-      const output = document.getElementById('output');
-      output.innerHTML = '';
+      const table = document.getElementById('dataTable');
+      table.innerHTML = '';
       snapshot.forEach((child) => {
         const item = child.val();
-        output.innerHTML += `<p>${item.name} | <a href='${item.archive}'>Download</a> | <a href='${item.online}'>View</a></p>`;
+        table.innerHTML += `<tr>
+          <td>${item.name}</td>
+          <td><a href='${item.archive}' target='_blank'>Скачать</a></td>
+          <td><a href='${item.online}' target='_blank'>Просмотр</a></td>
+          <td><button onclick="deleteRow('${child.key}')">Удалить</button></td>
+        </tr>`;
       });
     });
+
+    window.deleteRow = function(id) {
+      remove(ref(database, 'data/' + id));
+    };
   </script>
 </body>
 </html>
