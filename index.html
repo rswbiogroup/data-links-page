@@ -27,26 +27,24 @@
 
         const app = initializeApp(firebaseConfig);
         const database = getDatabase(app);
+        const dbRef = ref(database, 'data');
 
         function loadTable() {
             const table = document.getElementById('dataTable');
             table.innerHTML = '';
 
-            const dataRef = ref(database, 'data');
-
-            onValue(dataRef, (snapshot) => {
-                const data = snapshot.val();
-                if (data) {
-                    Object.values(data).forEach((item) => {
-                        const row = `
-                            <tr>
-                                <td>${item.name}</td>
-                                <td><a href="${item.archive}" target="_blank">Скачать</a></td>
-                                <td><a href="${item.online}" target="_blank">Просмотр</a></td>
-                            </tr>`;
-                        table.innerHTML += row;
-                    });
-                }
+            onValue(dbRef, (snapshot) => {
+                table.innerHTML = '';
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
+                    const row = `
+                        <tr>
+                            <td>${data.name}</td>
+                            <td><a href="${data.archive}" target="_blank">Скачать</a></td>
+                            <td><a href="${data.online}" target="_blank">Просмотр</a></td>
+                        </tr>`;
+                    table.innerHTML += row;
+                });
             });
         }
 
