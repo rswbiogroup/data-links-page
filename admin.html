@@ -1,69 +1,112 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="uz">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Firebase Admin Panel</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Административная панель</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 10px; }
+        th { background-color: #f2f2f2; }
+        input, button { margin: 10px; padding: 5px; }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
 </head>
 <body>
-  <h1>Firebase Admin Panel</h1>
+    <h2>Административная панель</h2>
+    <input type="text" id="infoName" placeholder="Маълумот номи">
+    <input type="text" id="archiveLink" placeholder="Ссылка на архив">
+    <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
+    <button onclick="addRow()">Добавить</button>
 
-  <input type="text" id="infoName" placeholder="Маълумот номи" />
-  <input type="text" id="archiveLink" placeholder="Ссылка на архив" />
-  <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр" />
-  <button onclick="addRow()">Добавить</button>
+    <table>
+        <thead>
+            <tr>
+                <th>Маълумотлар номланиши</th>
+                <th>Архив (скачать)</th>
+                <th>Онлайн просмотр</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody id="dataTable">
+        </tbody>
+    </table>
 
-  <table border="1">
-    <thead>
-      <tr>
-        <th>Маълумотлар номланиши</th>
-        <th>Архив (скачать)</th>
-        <th>Онлайн просмотр</th>
-        <th>Действие</th>
-      </tr>
-    </thead>
-    <tbody id="dataTable"></tbody>
-  </table>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQ6yprlayQQ2QgsJ8OPBtN-LHSAjVLT6k",
+            authDomain: "adminconsole-9b608.firebaseapp.com",
+            databaseURL: "https://adminconsole-9b608-default-rtdb.firebaseio.com",
+            projectId: "adminconsole-9b608",
+            storageBucket: "adminconsole-9b608.firebasestorage.app",
+            messagingSenderId: "871383942468",
+            appId: "1:871383942468:web:c0de353864d94cb6948311",
+            measurementId: "G-6NVKE3XYZM"
+        };
 
-  <script type="module">
-    import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-    import { getDatabase, ref, push, set, remove, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database(app);
 
-    const firebaseConfig = { /* вставьте ваш firebaseConfig сюда */ };
+        function loadTable() {
+            const table = document.getElementById('dataTable');
+            table.innerHTML = '';
 
-    const app = initializeApp(firebaseConfig);
-    const database = getDatabase(app);
+            const dataRef = database.ref('data');
 
-    window.addRow = function() {
-      const name = document.getElementById('infoName').value;
-      const archive = document.getElementById('archiveLink').value;
-      const online = document.getElementById('onlineLink').value;
-      if (name && archive && online) {
-        const newRef = push(ref(database, 'data'));
-        set(newRef, { name, archive, online });
-      } else {
-        alert('Заполните все поля!');
-      }
-    };
+            dataRef.once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    Object.values(data).forEach((item) => {
+                        const row = `
+                            <tr>
+                                <td>${item.name}</td>
+                                <td><a href="${item.archive}" target="_blank">Скачать</a></td>
+                                <td><a href="${item.online}" target="_blank">Просмотр</a></td>
+                                <td><button onclick="deleteRow('${item.id}')">Удалить</button></td>
+                            </tr>
+                        `;
+                        table.innerHTML += row;
+                    });
+                }
+            });
+        }
 
-    const dataRef = ref(database, 'data');
-    onValue(dataRef, (snapshot) => {
-      const table = document.getElementById('dataTable');
-      table.innerHTML = '';
-      snapshot.forEach((child) => {
-        const item = child.val();
-        table.innerHTML += `<tr>
-          <td>${item.name}</td>
-          <td><a href='${item.archive}' target='_blank'>Скачать</a></td>
-          <td><a href='${item.online}' target='_blank'>Просмотр</a></td>
-          <td><button onclick="deleteRow('${child.key}')">Удалить</button></td>
-        </tr>`;
-      });
-    });
+        function addRow() {
+            const name = document.getElementById('infoName').value;
+            const archive = document.getElementById('archiveLink').value;
+            const online = document.getElementById('onlineLink').value;
 
-    window.deleteRow = function(id) {
-      remove(ref(database, 'data/' + id));
-    };
-  </script>
+            if (!name || !archive || !online) {
+                alert('Заполните все поля!');
+                return;
+            }
+
+            const newDataRef = database.ref('data').push();
+            newDataRef.set({
+                name: name,
+                archive: archive,
+                online: online,
+                id: newDataRef.key
+            });
+
+            document.getElementById('infoName').value = '';
+            document.getElementById('archiveLink').value = '';
+            document.getElementById('onlineLink').value = '';
+
+            loadTable();
+        }
+
+        function deleteRow(id) {
+            const dataRef = database.ref('data/' + id);
+            dataRef.remove().then(() => {
+                loadTable();
+            });
+        }
+
+        window.onload = loadTable;
+    </script>
 </body>
 </html>
