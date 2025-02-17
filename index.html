@@ -10,10 +10,12 @@
         th, td { border: 1px solid black; padding: 10px; }
         th { background-color: #f2f2f2; }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
 </head>
 <body>
     <h2>Маълумотлар</h2>
-    
+
     <table>
         <thead>
             <tr>
@@ -27,20 +29,43 @@
     </table>
 
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCQ6yprlayQQ2QgsJ8OPBtN-LHSAjVLT6k",
+            authDomain: "adminconsole-9b608.firebaseapp.com",
+            databaseURL: "https://adminconsole-9b608-default-rtdb.firebaseio.com",
+            projectId: "adminconsole-9b608",
+            storageBucket: "adminconsole-9b608.firebasestorage.app",
+            messagingSenderId: "871383942468",
+            appId: "1:871383942468:web:c0de353864d94cb6948311",
+            measurementId: "G-6NVKE3XYZM"
+        };
+
+        const app = firebase.initializeApp(firebaseConfig);
+        const database = firebase.database(app);
+
         function loadTable() {
-            let data = JSON.parse(localStorage.getItem('data')) || [];
-            let table = document.getElementById('dataTable');
+            const table = document.getElementById('dataTable');
             table.innerHTML = '';
-            data.forEach((item) => {
-                let row = `<tr>
-                    <td>${item.name}</td>
-                    <td><a href="${item.archive}" target="_blank">Скачать</a></td>
-                    <td><a href="${item.online}" target="_blank">Просмотр</a></td>
-                </tr>`;
-                table.innerHTML += row;
+
+            const dataRef = database.ref('data');
+
+            dataRef.once('value', (snapshot) => {
+                const data = snapshot.val();
+                if (data) {
+                    Object.values(data).forEach((item) => {
+                        const row = `
+                            <tr>
+                                <td>${item.name}</td>
+                                <td><a href="${item.archive}" target="_blank">Скачать</a></td>
+                                <td><a href="${item.online}" target="_blank">Просмотр</a></td>
+                            </tr>
+                        `;
+                        table.innerHTML += row;
+                    });
+                }
             });
         }
-        
+
         window.onload = loadTable;
     </script>
 </body>
