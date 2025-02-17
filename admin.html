@@ -11,9 +11,29 @@
         th { background-color: #f2f2f2; }
         input, button { margin: 10px; padding: 5px; }
     </style>
+</head>
+<body>
+    <h2>Административная панель</h2>
+    <input type="text" id="infoName" placeholder="Маълумот номи">
+    <input type="text" id="archiveLink" placeholder="Ссылка на архив">
+    <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
+    <button onclick="addRow()">Добавить</button>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Маълумотлар номланиши</th>
+                <th>Архив (скачать)</th>
+                <th>Онлайн просмотр</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+    </table>
+
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getDatabase, ref, push, set, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
@@ -27,27 +47,8 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-
-        function loadTable() {
-            const table = document.getElementById('dataTable');
-            table.innerHTML = '';
-            const dataRef = ref(database, 'data');
-            onValue(dataRef, (snapshot) => {
-                table.innerHTML = '';
-                snapshot.forEach((childSnapshot) => {
-                    const item = childSnapshot.val();
-                    const row = `
-                        <tr>
-                            <td>${item.name}</td>
-                            <td><a href="${item.archive}" target="_blank">Скачать</a></td>
-                            <td><a href="${item.online}" target="_blank">Просмотр</a></td>
-                            <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
-                        </tr>`;
-                    table.innerHTML += row;
-                });
-            });
-        }
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'data');
 
         window.addRow = function() {
             const name = document.getElementById('infoName').value;
@@ -57,39 +58,26 @@
                 alert('Заполните все поля!');
                 return;
             }
-            const dataRef = ref(database, 'data');
-            const newData = push(dataRef);
-            set(newData, { name, archive, online });
-            document.getElementById('infoName').value = '';
-            document.getElementById('archiveLink').value = '';
-            document.getElementById('onlineLink').value = '';
+            push(dbRef, { name, archive, online });
         }
 
-        window.deleteRow = function(id) {
-            const dataRef = ref(database, 'data/' + id);
-            remove(dataRef);
-        }
+        onValue(dbRef, (snapshot) => {
+            const table = document.getElementById('dataTable');
+            table.innerHTML = '';
+            snapshot.forEach((childSnapshot) => {
+                const data = childSnapshot.val();
+                table.innerHTML += `<tr>
+                    <td>${data.name}</td>
+                    <td><a href="${data.archive}" target="_blank">Скачать</a></td>
+                    <td><a href="${data.online}" target="_blank">Просмотр</a></td>
+                    <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
+                </tr>`;
+            });
+        });
 
-        window.onload = loadTable;
+        window.deleteRow = function(key) {
+            remove(ref(db, 'data/' + key));
+        }
     </script>
-</head>
-<body>
-    <h2>Административная панель</h2>
-    <input type="text" id="infoName" placeholder="Маълумот номи">
-    <input type="text" id="archiveLink" placeholder="Ссылка на архив">
-    <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
-    <button onclick="addRow()">Добавить</button>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Маълумотлар номланиши</th>
-                <th>Архив (скачать)</th>
-                <th>Онлайн просмотр</th>
-                <th>Действие</th>
-            </tr>
-        </thead>
-        <tbody id="dataTable"></tbody>
-    </table>
 </body>
 </html>
