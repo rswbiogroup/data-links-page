@@ -11,8 +11,6 @@
         th { background-color: #f2f2f2; }
         input, button { margin: 10px; padding: 5px; }
     </style>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
 </head>
 <body>
     <h2>Административная панель</h2>
@@ -20,7 +18,7 @@
     <input type="text" id="archiveLink" placeholder="Ссылка на архив">
     <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
     <button onclick="addRow()">Добавить</button>
-
+    
     <table>
         <thead>
             <tr>
@@ -34,7 +32,11 @@
         </tbody>
     </table>
 
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.0.2/firebase-database.js"></script>
+
     <script>
+        // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCQ6yprlayQQ2QgsJ8OPBtN-LHSAjVLT6k",
             authDomain: "adminconsole-9b608.firebaseapp.com",
@@ -48,64 +50,60 @@
 
         // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database(app);
+        const database = firebase.database();
 
+        // Load data from Firebase Realtime Database
         function loadTable() {
             const table = document.getElementById('dataTable');
-            table.innerHTML = '';
+            const dbRef = database.ref('data'); // Reference to the "data" node in the database
 
-            const dataRef = database.ref('data');
-
-            dataRef.once('value', (snapshot) => {
+            dbRef.on('value', (snapshot) => {
                 const data = snapshot.val();
-                if (data) {
-                    Object.values(data).forEach((item) => {
-                        const row = `
-                            <tr>
-                                <td>${item.name}</td>
-                                <td><a href="${item.archive}" target="_blank">Скачать</a></td>
-                                <td><a href="${item.online}" target="_blank">Просмотр</a></td>
-                                <td><button onclick="deleteRow('${item.id}')">Удалить</button></td>
-                            </tr>
-                        `;
-                        table.innerHTML += row;
-                    });
+                table.innerHTML = ''; // Clear the table
+                for (let key in data) {
+                    let row = `<tr>
+                        <td>${data[key].name}</td>
+                        <td><a href="${data[key].archive}" target="_blank">Скачать</a></td>
+                        <td><a href="${data[key].online}" target="_blank">Просмотр</a></td>
+                        <td><button onclick="deleteRow('${key}')">Удалить</button></td>
+                    </tr>`;
+                    table.innerHTML += row;
                 }
             });
         }
 
+        // Add data to Firebase Realtime Database
         function addRow() {
-            const name = document.getElementById('infoName').value;
-            const archive = document.getElementById('archiveLink').value;
-            const online = document.getElementById('onlineLink').value;
-
+            let name = document.getElementById('infoName').value;
+            let archive = document.getElementById('archiveLink').value;
+            let online = document.getElementById('onlineLink').value;
+            
             if (!name || !archive || !online) {
                 alert('Заполните все поля!');
                 return;
             }
-
-            const newDataRef = database.ref('data').push();
-            newDataRef.set({
+            
+            const newData = {
                 name: name,
                 archive: archive,
-                online: online,
-                id: newDataRef.key
-            });
+                online: online
+            };
+
+            const dbRef = database.ref('data'); // Reference to the "data" node in the database
+            dbRef.push(newData); // Push new data to the database
 
             document.getElementById('infoName').value = '';
             document.getElementById('archiveLink').value = '';
             document.getElementById('onlineLink').value = '';
-
-            loadTable();
         }
 
-        function deleteRow(id) {
-            const dataRef = database.ref('data/' + id);
-            dataRef.remove().then(() => {
-                loadTable();
-            });
+        // Delete data from Firebase Realtime Database
+        function deleteRow(key) {
+            const dbRef = database.ref('data/' + key); // Reference to the specific data node
+            dbRef.remove(); // Remove the data from the database
         }
 
+        // Call loadTable when the page is loaded
         window.onload = loadTable;
     </script>
 </body>
