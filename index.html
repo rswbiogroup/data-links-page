@@ -11,8 +11,8 @@
         th { background-color: #f2f2f2; }
     </style>
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
-        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js';
+        import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js';
 
         const firebaseConfig = {
             apiKey: "AIzaSyCQ6yprlayQQ2QgsJ8OPBtN-LHSAjVLT6k",
@@ -30,13 +30,11 @@
 
         function loadTable() {
             const table = document.getElementById('dataTable');
-            table.innerHTML = '';
-
             const dataRef = ref(database, 'data');
 
             onValue(dataRef, (snapshot) => {
-                const data = snapshot.val();
                 table.innerHTML = '';
+                const data = snapshot.val();
                 if (data) {
                     Object.values(data).forEach((item) => {
                         const row = `
@@ -57,6 +55,7 @@
 </head>
 <body>
     <h2>Маълумотлар</h2>
+
     <table>
         <thead>
             <tr>
@@ -65,7 +64,8 @@
                 <th>Онлайн просмотр</th>
             </tr>
         </thead>
-        <tbody id="dataTable"></tbody>
+        <tbody id="dataTable">
+        </tbody>
     </table>
 </body>
 </html>
