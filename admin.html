@@ -3,23 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Firebase Realtime Database Demo</title>
+  <title>Firebase Admin Panel</title>
 </head>
 <body>
-  <h1>Firebase Realtime Database Demo</h1>
+  <h1>Firebase Admin Panel</h1>
 
-  <input type="text" id="dataInput" placeholder="Enter data" />
-  <button onclick="writeData()">Add Data</button>
+  <input type="text" id="infoName" placeholder="Data Name" />
+  <input type="text" id="archiveLink" placeholder="Archive Link" />
+  <input type="text" id="onlineLink" placeholder="Online View Link" />
+  <button onclick="addRow()">Add Data</button>
 
   <div id="output"></div>
 
   <script type="module">
-    // Import Firebase SDK
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js';
-    import { getDatabase, ref, set, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
+    import { getDatabase, ref, push, set, remove, onValue } from 'https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js';
 
     const firebaseConfig = {
-      apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
+      apiKey: "AIza...",
       authDomain: "docs-3a3de.firebaseapp.com",
       databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
       projectId: "docs-3a3de",
@@ -32,14 +33,15 @@
     const app = initializeApp(firebaseConfig);
     const database = getDatabase(app);
 
-    window.writeData = function() {
-      const data = document.getElementById('dataInput').value;
-      if (data.trim() !== '') {
-        set(ref(database, 'data/' + Date.now()), {
-          value: data
-        });
+    window.addRow = function() {
+      const name = document.getElementById('infoName').value;
+      const archive = document.getElementById('archiveLink').value;
+      const online = document.getElementById('onlineLink').value;
+      if (name && archive && online) {
+        const newRef = push(ref(database, 'data'));
+        set(newRef, { name, archive, online });
       } else {
-        alert('Please enter some data');
+        alert('Fill all fields!');
       }
     };
 
@@ -47,9 +49,9 @@
     onValue(dataRef, (snapshot) => {
       const output = document.getElementById('output');
       output.innerHTML = '';
-      snapshot.forEach((childSnapshot) => {
-        const item = childSnapshot.val();
-        output.innerHTML += `<p>${item.value}</p>`;
+      snapshot.forEach((child) => {
+        const item = child.val();
+        output.innerHTML += `<p>${item.name} | <a href='${item.archive}'>Download</a> | <a href='${item.online}'>View</a></p>`;
       });
     });
   </script>
