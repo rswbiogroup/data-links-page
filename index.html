@@ -10,26 +10,10 @@
         th, td { border: 1px solid black; padding: 10px; }
         th { background-color: #f2f2f2; }
     </style>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js"></script>
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-app.js";
+        import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
 
-</head>
-<body>
-    <h2>Маълумотлар</h2>
-
-    <table>
-        <thead>
-            <tr>
-                <th>Маълумотлар номланиши</th>
-                <th>Архив (скачать)</th>
-                <th>Онлайн просмотр</th>
-            </tr>
-        </thead>
-        <tbody id="dataTable">
-        </tbody>
-    </table>
-
-    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCQ6yprlayQQ2QgsJ8OPBtN-LHSAjVLT6k",
             authDomain: "adminconsole-9b608.firebaseapp.com",
@@ -41,17 +25,18 @@
             measurementId: "G-6NVKE3XYZM"
         };
 
-        const app = firebase.initializeApp(firebaseConfig);
-        const database = firebase.database(app);
+        const app = initializeApp(firebaseConfig);
+        const database = getDatabase(app);
 
         function loadTable() {
             const table = document.getElementById('dataTable');
             table.innerHTML = '';
 
-            const dataRef = database.ref('data');
+            const dataRef = ref(database, 'data');
 
-            dataRef.once('value', (snapshot) => {
+            onValue(dataRef, (snapshot) => {
                 const data = snapshot.val();
+                table.innerHTML = '';
                 if (data) {
                     Object.values(data).forEach((item) => {
                         const row = `
@@ -69,5 +54,18 @@
 
         window.onload = loadTable;
     </script>
+</head>
+<body>
+    <h2>Маълумотлар</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Маълумотлар номланиши</th>
+                <th>Архив (скачать)</th>
+                <th>Онлайн просмотр</th>
+            </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+    </table>
 </body>
 </html>
