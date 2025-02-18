@@ -19,7 +19,7 @@
     <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
     <button onclick="addRow()">Добавить</button>
     <button onclick="logout()">Выйти</button>
-    
+
     <table>
         <thead>
             <tr>
@@ -54,12 +54,16 @@
         const auth = getAuth(app);
         const dbRef = ref(db, 'data');
 
+        // Проверка аутентификации до загрузки страницы
         onAuthStateChanged(auth, (user) => {
             if (!user) {
-                window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
+                window.location.replace('https://rswbiogroup.github.io/data-links-page/login.html');
             } else {
                 document.body.style.display = 'block';
             }
+        }, (error) => {
+            console.error('Ошибка проверки аутентификации:', error);
+            window.location.replace('https://rswbiogroup.github.io/data-links-page/login.html');
         });
 
         window.addRow = function() {
@@ -101,7 +105,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     signOut(auth).then(() => {
-                        window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
+                        window.location.replace('https://rswbiogroup.github.io/data-links-page/login.html');
                     }).catch((error) => {
                         alert('Ошибка при выходе: ' + error.message);
                     });
