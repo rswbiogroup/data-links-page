@@ -21,8 +21,8 @@
     <input type="text" id="infoName" placeholder="Маълумот номи">
     <input type="text" id="archiveLink" placeholder="Ссылка на архив">
     <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
-    <button onclick="addRow()">Добавить</button>
-    <button onclick="logout()">Выйти</button>
+    <button id="addRowButton">Добавить</button>
+    <button id="logoutButton">Выйти</button>
     
     <table>
         <thead>
@@ -105,7 +105,8 @@
             table.style.display = 'table';
             snapshot.forEach(child => {
                 const { name, archive, online } = child.val();
-                tbody.innerHTML += `<tr>
+                const row = document.createElement('tr');
+                row.innerHTML = `
                     <td>${name}</td>
                     <td><a href="${archive}" target="_blank">Скачать</a></td>
                     <td><a href="${online}" target="_blank">Просмотр</a></td>
@@ -113,14 +114,18 @@
                         <button onclick="editRow('${child.key}', '${name}', '${archive}', '${online}')">Редактировать</button>
                         <button onclick="deleteRow('${child.key}')">Удалить</button>
                     </td>
-                </tr>`;
+                `;
+                tbody.appendChild(row);
             });
         });
 
-        function logout() {
+        document.getElementById('addRowButton').addEventListener('click', addRow);
+        document.getElementById('logoutButton').addEventListener('click', () => {
             signOut(auth).then(() => window.location.href = 'login.html').catch(err => alert('Ошибка: ' + err.message));
-        }
+        });
+
+        window.editRow = editRow;
+        window.deleteRow = deleteRow;
     </script>
 </body>
 </html>
-
