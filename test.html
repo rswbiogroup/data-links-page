@@ -10,7 +10,7 @@
         th, td { border: 1px solid black; padding: 10px; }
         th { background-color: #f2f2f2; }
         input, button { margin: 10px; padding: 10px; border-radius: 5px; }
-        button { background-color: #4574a0; color: white; border: none; cursor: pointer; }
+        button { background-color: #4574a0; color: white; border: none; cursor: pointer; padding: 10px 15px; }
         button:hover { background-color: #455da0; }
         @media (max-width: 600px) { table, input, button { width: 100%; } }
     </style>
@@ -57,11 +57,9 @@
         const auth = getAuth(app);
         const dbRef = ref(db, 'data');
 
-        document.addEventListener("DOMContentLoaded", () => {
-            onAuthStateChanged(auth, (user) => {
-                if (!user) window.location.href = 'login.html';
-                else document.body.style.display = 'block';
-            });
+        onAuthStateChanged(auth, (user) => {
+            if (!user) window.location.href = 'login.html';
+            else document.body.style.display = 'block';
         });
 
         function isValidURL(url) { return /^https?:\/\/.+/.test(url); }
@@ -125,3 +123,4 @@
     </script>
 </body>
 </html>
+
