@@ -19,7 +19,7 @@
     <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
     <button onclick="addRow()">Добавить</button>
     <button onclick="logout()">Выйти</button>
-    
+
     <table>
         <thead>
             <tr>
@@ -52,6 +52,7 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
 
+        // Проверка аутентификации
         onAuthStateChanged(auth, (user) => {
             if (!user) {
                 window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
@@ -99,4 +100,3 @@
     </script>
 </body>
 </html>
-
