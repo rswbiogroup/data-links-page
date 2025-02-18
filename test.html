@@ -4,44 +4,37 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Административная панель</title>
-    <!-- Подключение Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Подключение SweetAlert2 -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; display: none; }
-        .dark-mode { background-color: #121212; color: #ffffff; }
-        .dark-mode .table { color: #ffffff; }
-        .dark-mode .table th, .dark-mode .table td { border-color: #444; }
-        .dark-mode .btn-primary { background-color: #0d6efd; border-color: #0d6efd; }
-        .dark-mode .btn-danger { background-color: #dc3545; border-color: #dc3545; }
-        .dark-mode .btn-secondary { background-color: #6c757d; border-color: #6c757d; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; display: none; }
+        th, td { border: 1px solid black; padding: 10px; }
+        th { background-color: #f2f2f2; }
+        input, button { margin: 10px; padding: 10px; border-radius: 5px; }
+        button { background-color: #4574a0; color: white; border: none; cursor: pointer; padding: 10px 15px; }
+        button:hover { background-color: #455da0; }
+        @media (max-width: 600px) { table, input, button { width: 100%; } }
     </style>
 </head>
-<body class="light-mode">
-    <div class="container mt-5">
-        <h2>Административная панель</h2>
-        <button id="themeToggle" class="btn btn-secondary mb-3">Темная тема</button>
-        <div class="mb-3">
-            <input type="text" id="infoName" class="form-control" placeholder="Маълумот номи">
-            <input type="text" id="archiveLink" class="form-control mt-2" placeholder="Ссылка на архив">
-            <input type="text" id="onlineLink" class="form-control mt-2" placeholder="Ссылка на онлайн просмотр">
-            <button id="addRowButton" class="btn btn-primary mt-2">Добавить</button>
-            <button id="logoutButton" class="btn btn-danger mt-2">Выйти</button>
-        </div>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th>Маълумотлар номланиши</th>
-                    <th>Архив (скачать)</th>
-                    <th>Онлайн просмотр</th>
-                    <th>Действие</th>
-                </tr>
-            </thead>
-            <tbody id="dataTable"></tbody>
-        </table>
-        <div id="statistics" class="mt-4"></div>
-    </div>
+<body>
+    <h2>Административная панель</h2>
+    <input type="text" id="searchBox" placeholder="Поиск..." onkeyup="filterTable()">
+    <input type="text" id="infoName" placeholder="Маълумот номи">
+    <input type="text" id="archiveLink" placeholder="Ссылка на архив">
+    <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
+    <button id="addRowButton">Добавить</button>
+    <button id="logoutButton">Выйти</button>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Маълумотлар номланиши</th>
+                <th>Архив (скачать)</th>
+                <th>Онлайн просмотр</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+    </table>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
@@ -65,7 +58,7 @@
         const dbRef = ref(db, 'data');
 
         onAuthStateChanged(auth, (user) => {
-            if (!user) window.location.href = 'login.html';
+            if (!user) window.location.href = '/'; // Перенаправление на корневую страницу, если пользователь не авторизован
             else document.body.style.display = 'block';
         });
 
@@ -75,62 +68,33 @@
             const name = document.getElementById('infoName').value;
             const archive = document.getElementById('archiveLink').value;
             const online = document.getElementById('onlineLink').value;
-            if (!name || !archive || !online) return Swal.fire('Ошибка', 'Заполните все поля!', 'error');
-            if (!isValidURL(archive) || !isValidURL(online)) return Swal.fire('Ошибка', 'Введите корректные ссылки!', 'error');
+            if (!name || !archive || !online) return alert('Заполните все поля!');
+            if (!isValidURL(archive) || !isValidURL(online)) return alert('Введите корректные ссылки!');
             
             onValue(dbRef, (snapshot) => {
                 let exists = false;
                 snapshot.forEach(child => { if (child.val().name === name) exists = true; });
-                if (exists) return Swal.fire('Ошибка', 'Такой элемент уже существует!', 'error');
+                if (exists) return alert('Такой элемент уже существует!');
                 push(dbRef, { name, archive, online, timestamp: new Date().toISOString(), user: auth.currentUser.email });
             }, { onlyOnce: true });
         }
 
         function deleteRow(key) {
-            Swal.fire({
-                title: 'Вы уверены?',
-                text: "Вы не сможете отменить это!",
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonColor: '#3085d6',
-                cancelButtonColor: '#d33',
-                confirmButtonText: 'Да, удалить!'
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    remove(ref(db, 'data/' + key));
-                    Swal.fire('Удалено!', 'Запись была удалена.', 'success');
-                }
-            });
+            if (confirm('Вы уверены, что хотите удалить запись?')) remove(ref(db, 'data/' + key));
         }
 
         function editRow(key, oldName, oldArchive, oldOnline) {
-            Swal.fire({
-                title: 'Редактировать запись',
-                html:
-                    `<input id="swal-input1" class="swal2-input" value="${oldName}">` +
-                    `<input id="swal-input2" class="swal2-input" value="${oldArchive}">` +
-                    `<input id="swal-input3" class="swal2-input" value="${oldOnline}">`,
-                focusConfirm: false,
-                preConfirm: () => {
-                    return {
-                        name: document.getElementById('swal-input1').value,
-                        archive: document.getElementById('swal-input2').value,
-                        online: document.getElementById('swal-input3').value
-                    }
-                }
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    const { name, archive, online } = result.value;
-                    set(ref(db, 'data/' + key), { name, archive, online, timestamp: new Date().toISOString(), user: auth.currentUser.email });
-                    Swal.fire('Успешно!', 'Запись обновлена.', 'success');
-                }
-            });
+            const name = prompt('Новое название:', oldName) || oldName;
+            const archive = prompt('Новый архив:', oldArchive) || oldArchive;
+            const online = prompt('Новый просмотр:', oldOnline) || oldOnline;
+            set(ref(db, 'data/' + key), { name, archive, online, timestamp: new Date().toISOString(), user: auth.currentUser.email });
         }
 
-        function updateStatistics(snapshot) {
-            const statistics = document.getElementById('statistics');
-            const count = snapshot.size;
-            statistics.innerHTML = `<p>Всего записей: ${count}</p>`;
+        function filterTable() {
+            const query = document.getElementById('searchBox').value.toLowerCase();
+            document.querySelectorAll('#dataTable tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
+            });
         }
 
         onValue(dbRef, (snapshot) => {
@@ -142,29 +106,24 @@
             snapshot.forEach(child => {
                 const { name, archive, online } = child.val();
                 const row = document.createElement('tr');
-                row.innerHTML = 
-                    `<td>${name}</td>
+                row.innerHTML = `
+                    <td>${name}</td>
                     <td><a href="${archive}" target="_blank">Скачать</a></td>
                     <td><a href="${online}" target="_blank">Просмотр</a></td>
                     <td>
-                        <button class="btn btn-primary" onclick="editRow('${child.key}', '${name}', '${archive}', '${online}')">Редактировать</button>
-                        <button class="btn btn-danger" onclick="deleteRow('${child.key}')">Удалить</button>
-                    </td>`;
+                        <button onclick="editRow('${child.key}', '${name}', '${archive}', '${online}')">Редактировать</button>
+                        <button onclick="deleteRow('${child.key}')">Удалить</button>
+                    </td>
+                `;
                 tbody.appendChild(row);
             });
-            updateStatistics(snapshot);
         });
 
         document.getElementById('addRowButton').addEventListener('click', addRow);
         document.getElementById('logoutButton').addEventListener('click', () => {
-            signOut(auth).then(() => window.location.href = 'login.html').catch(err => Swal.fire('Ошибка', err.message, 'error'));
-        });
-
-        document.getElementById('themeToggle').addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            document.body.classList.toggle('light-mode');
-            const theme = document.body.classList.contains('dark-mode') ? 'Темная тема' : 'Светлая тема';
-            document.getElementById('themeToggle').textContent = theme;
+            signOut(auth).then(() => {
+                window.location.href = '/'; // Перенаправление на корневую страницу
+            }).catch(err => alert('Ошибка: ' + err.message));
         });
 
         window.editRow = editRow;
