@@ -18,8 +18,8 @@
     <input type="text" id="archiveLink" placeholder="Ссылка на архив">
     <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
     <button onclick="addRow()">Добавить</button>
-    <button onclick="logout()">Выйти</button>
-
+    <button onclick="logout()">Выход</button>
+    
     <table>
         <thead>
             <tr>
@@ -32,83 +32,78 @@
         <tbody id="dataTable"></tbody>
     </table>
 
-   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
-    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
-        authDomain: "docs-3a3de.firebaseapp.com",
-        databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
-        projectId: "docs-3a3de",
-        storageBucket: "docs-3a3de.firebasestorage.app",
-        messagingSenderId: "852859489033",
-        appId: "1:852859489033:web:f22190feea785d8e8461d8",
-        measurementId: "G-3L1HF1V8SB"
-    };
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",  // замените на свои данные
+            authDomain: "docs-3a3de.firebaseapp.com",
+            databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "docs-3a3de",
+            storageBucket: "docs-3a3de.firebasestorage.app",
+            messagingSenderId: "852859489033",
+            appId: "1:852859489033:web:f22190feea785d8e8461d8",
+            measurementId: "G-3L1HF1V8SB"
+        };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
-    const auth = getAuth(app);
-    const dbRef = ref(db, 'data');
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const dbRef = ref(db, 'data');
+        const auth = getAuth();
 
-    window.addRow = function() {
-        const name = document.getElementById('infoName').value;
-        const archive = document.getElementById('archiveLink').value;
-        const online = document.getElementById('onlineLink').value;
-        if (!name || !archive || !online) {
-            alert('Заполните все поля!');
-            return;
+        let inactivityTimer;
+
+        function resetTimer() {
+            clearTimeout(inactivityTimer);
+            inactivityTimer = setTimeout(() => logout(), 600000); // 10 минут
         }
-        push(dbRef, { name, archive, online });
-    }
 
-    onValue(dbRef, (snapshot) => {
-        const table = document.getElementById('dataTable');
-        table.innerHTML = '';
-        snapshot.forEach((childSnapshot) => {
-            const data = childSnapshot.val();
-            table.innerHTML += `<tr>
-                <td>${data.name}</td>
-                <td><a href="${data.archive}" target="_blank">Скачать</a></td>
-                <td><a href="${data.online}" target="_blank">Просмотр</a></td>
-                <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
-            </tr>`;
+        window.addEventListener('mousemove', resetTimer);
+        window.addEventListener('keydown', resetTimer);
+
+        window.logout = function() {
+            signOut(auth).then(() => {
+                window.location.href = 'login.html';
+            });
+        }
+
+        onAuthStateChanged(auth, user => {
+            if (!user) {
+                window.location.href = 'login.html';
+            }
         });
-    });
 
-    window.deleteRow = function(key) {
-        remove(ref(db, 'data/' + key));
-    }
+        window.addRow = function() {
+            const name = document.getElementById('infoName').value;
+            const archive = document.getElementById('archiveLink').value;
+            const online = document.getElementById('onlineLink').value;
+            if (!name || !archive || !online) {
+                alert('Заполните все поля!');
+                return;
+            }
+            push(dbRef, { name, archive, online });
+        }
 
-    // Кнопка выхода
-    window.logout = function() {
-        signOut(auth).then(() => {
-            alert('Вы успешно вышли.');
-            window.location.href = 'index.html'; // Перенаправление на страницу входа
-        }).catch((error) => {
-            console.error('Ошибка выхода:', error);
-            alert('Ошибка выхода!');
+        onValue(dbRef, (snapshot) => {
+            const table = document.getElementById('dataTable');
+            table.innerHTML = '';
+            snapshot.forEach((childSnapshot) => {
+                const data = childSnapshot.val();
+                table.innerHTML += `<tr>
+                    <td>${data.name}</td>
+                    <td><a href="${data.archive}" target="_blank">Скачать</a></td>
+                    <td><a href="${data.online}" target="_blank">Просмотр</a></td>
+                    <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
+                </tr>`;
+            });
         });
-    }
 
-    // Автоматический выход через 10 минут
-    let timeout;
-    function resetTimer() {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => signOut(auth).then(() => {
-            alert('Время сессии истекло, выполнен выход.');
-            window.location.href = 'index.html';
-        }).catch((error) => console.error('Ошибка выхода:', error)), 10 * 60 * 1000);
-    }
+        window.deleteRow = function(key) {
+            remove(ref(db, 'data/' + key));
+        }
 
-    window.onload = resetTimer;
-    window.onmousemove = resetTimer;
-    window.onkeypress = resetTimer;
-</script>
-
-<!-- Добавим кнопку выхода в HTML -->
-<button onclick="logout()">Выйти</button>
+    </script>
 </body>
 </html>
