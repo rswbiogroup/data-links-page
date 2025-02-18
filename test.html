@@ -6,14 +6,18 @@
     <title>Административная панель</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; display: none; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; display: none; }
         th, td { border: 1px solid black; padding: 10px; }
         th { background-color: #f2f2f2; }
-        input, button { margin: 10px; padding: 5px; }
+        input, button { margin: 10px; padding: 10px; border-radius: 5px; }
+        button { background-color: #4CAF50; color: white; border: none; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        @media (max-width: 600px) { table, input, button { width: 100%; } }
     </style>
 </head>
 <body>
     <h2>Административная панель</h2>
+    <input type="text" id="searchBox" placeholder="Поиск..." onkeyup="filterTable()">
     <input type="text" id="infoName" placeholder="Маълумот номи">
     <input type="text" id="archiveLink" placeholder="Ссылка на архив">
     <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
@@ -34,7 +38,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+        import { getDatabase, ref, push, onValue, remove, set } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 
         const firebaseConfig = {
@@ -54,52 +58,67 @@
         const dbRef = ref(db, 'data');
 
         onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
-            } else {
-                document.body.style.display = 'block';
-            }
+            if (!user) window.location.href = 'login.html';
+            else document.body.style.display = 'block';
         });
 
-        window.addRow = function() {
+        function isValidURL(url) { return /^https?:\/\/.+/.test(url); }
+
+        function addRow() {
             const name = document.getElementById('infoName').value;
             const archive = document.getElementById('archiveLink').value;
             const online = document.getElementById('onlineLink').value;
-            if (!name || !archive || !online) {
-                alert('Заполните все поля!');
-                return;
-            }
-            push(dbRef, { name, archive, online });
+            if (!name || !archive || !online) return alert('Заполните все поля!');
+            if (!isValidURL(archive) || !isValidURL(online)) return alert('Введите корректные ссылки!');
+            
+            onValue(dbRef, (snapshot) => {
+                let exists = false;
+                snapshot.forEach(child => { if (child.val().name === name) exists = true; });
+                if (exists) return alert('Такой элемент уже существует!');
+                push(dbRef, { name, archive, online, timestamp: new Date().toISOString(), user: auth.currentUser.email });
+            }, { onlyOnce: true });
+        }
 
-            document.getElementById('infoName').value = '';
-            document.getElementById('archiveLink').value = '';
-            document.getElementById('onlineLink').value = '';
+        function deleteRow(key) {
+            if (confirm('Вы уверены, что хотите удалить запись?')) remove(ref(db, 'data/' + key));
+        }
+
+        function editRow(key, oldName, oldArchive, oldOnline) {
+            const name = prompt('Новое название:', oldName) || oldName;
+            const archive = prompt('Новый архив:', oldArchive) || oldArchive;
+            const online = prompt('Новый просмотр:', oldOnline) || oldOnline;
+            set(ref(db, 'data/' + key), { name, archive, online, timestamp: new Date().toISOString(), user: auth.currentUser.email });
+        }
+
+        function filterTable() {
+            const query = document.getElementById('searchBox').value.toLowerCase();
+            document.querySelectorAll('#dataTable tr').forEach(row => {
+                row.style.display = row.innerText.toLowerCase().includes(query) ? '' : 'none';
+            });
         }
 
         onValue(dbRef, (snapshot) => {
-            const table = document.getElementById('dataTable');
-            table.innerHTML = '';
-            snapshot.forEach((childSnapshot) => {
-                const data = childSnapshot.val();
-                table.innerHTML += `<tr>
-                    <td>${data.name}</td>
-                    <td><a href="${data.archive}" target="_blank">Скачать</a></td>
-                    <td><a href="${data.online}" target="_blank">Просмотр</a></td>
-                    <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
+            const table = document.querySelector('table');
+            const tbody = document.getElementById('dataTable');
+            tbody.innerHTML = '';
+            if (!snapshot.exists()) return table.style.display = 'none';
+            table.style.display = 'table';
+            snapshot.forEach(child => {
+                const { name, archive, online } = child.val();
+                tbody.innerHTML += `<tr>
+                    <td>${name}</td>
+                    <td><a href="${archive}" target="_blank">Скачать</a></td>
+                    <td><a href="${online}" target="_blank">Просмотр</a></td>
+                    <td>
+                        <button onclick="editRow('${child.key}', '${name}', '${archive}', '${online}')">Редактировать</button>
+                        <button onclick="deleteRow('${child.key}')">Удалить</button>
+                    </td>
                 </tr>`;
             });
         });
 
-        window.deleteRow = function(key) {
-            remove(ref(db, 'data/' + key));
-        }
-
-        window.logout = function() {
-            signOut(auth).then(() => {
-                window.location.href = 'https://rswbiogroup.github.io/data-links-page/';
-            }).catch((error) => {
-                alert('Ошибка при выходе: ' + error.message);
-            });
+        function logout() {
+            signOut(auth).then(() => window.location.href = 'login.html').catch(err => alert('Ошибка: ' + err.message));
         }
     </script>
 </body>
