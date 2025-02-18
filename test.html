@@ -14,16 +14,16 @@
 </head>
 <body>
     <h2>Административная панель</h2>
-    <input type="text" id="infoName" placeholder="Маълумот номи">
+    <input type="text" id="infoName" placeholder="Имя данных">
     <input type="text" id="archiveLink" placeholder="Ссылка на архив">
-    <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
+    <input type="text" id="onlineLink" placeholder="Ссылка на онлайн-просмотр">
     <button onclick="addRow()">Добавить</button>
     <button onclick="logout()">Выход</button>
-    
+
     <table>
         <thead>
             <tr>
-                <th>Маълумотлар номланиши</th>
+                <th>Наименование данных</th>
                 <th>Архив (скачать)</th>
                 <th>Онлайн просмотр</th>
                 <th>Действие</th>
@@ -35,46 +35,62 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
-            authDomain: "docs-3a3de.firebaseapp.com",
-            databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "docs-3a3de",
-            storageBucket: "docs-3a3de.firebasestorage.app",
-            messagingSenderId: "852859489033",
-            appId: "1:852859489033:web:f22190feea785d8e8461d8",
-            measurementId: "G-3L1HF1V8SB"
-        };
+        const firebaseConfig = { /* твои настройки Firebase */ };
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
         const dbRef = ref(db, 'data');
 
-        window.addRow = function() { /* код добавления данных */ };
-        onValue(dbRef, (snapshot) => { /* код отображения данных */ });
-        window.deleteRow = function(key) { /* код удаления данных */ };
+        function checkAuth() {
+            onAuthStateChanged(auth, (user) => {
+                if (!user) {
+                    window.location.href = 'login.html';
+                }
+            });
+        }
 
-        // Функция выхода
+        checkAuth();
+
+        window.addRow = function() {
+            const name = document.getElementById('infoName').value;
+            const archive = document.getElementById('archiveLink').value;
+            const online = document.getElementById('onlineLink').value;
+            if (!name || !archive || !online) {
+                alert('Заполните все поля!');
+                return;
+            }
+            push(dbRef, { name, archive, online });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const table = document.getElementById('dataTable');
+            table.innerHTML = '';
+            snapshot.forEach((childSnapshot) => {
+                const data = childSnapshot.val();
+                table.innerHTML += `<tr>
+                    <td>${data.name}</td>
+                    <td><a href="${data.archive}" target="_blank">Скачать</a></td>
+                    <td><a href="${data.online}" target="_blank">Вид</a></td>
+                    <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
+                </tr>`;
+            });
+        });
+
+        window.deleteRow = function(key) {
+            remove(ref(db, 'data/' + key));
+        }
+
         window.logout = function() {
             signOut(auth).then(() => {
                 window.location.href = 'login.html';
             }).catch((error) => {
-                alert('Ошибка выхода: ' + error.message);
+                alert('Ошибка при выходе: ' + error.message);
             });
-        };
-
-        // Автоматический выход при бездействии
-        let timeout;
-        function resetTimer() {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => logout(), 300000); // 5 минут
         }
-        window.onload = resetTimer;
-        document.onmousemove = resetTimer;
-        document.onkeypress = resetTimer;
+
     </script>
 </body>
 </html>
