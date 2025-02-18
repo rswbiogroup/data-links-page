@@ -19,7 +19,7 @@
     <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
     <button onclick="addRow()">Добавить</button>
     <button onclick="logout()">Выйти</button>
-
+    
     <table>
         <thead>
             <tr>
@@ -54,17 +54,32 @@
         const auth = getAuth(app);
         const dbRef = ref(db, 'data');
 
-        // Проверка аутентификации до загрузки страницы
         onAuthStateChanged(auth, (user) => {
             if (!user) {
-                window.location.replace('https://rswbiogroup.github.io/data-links-page/login.html');
+                window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
             } else {
                 document.body.style.display = 'block';
+                loadData();
             }
-        }, (error) => {
-            console.error('Ошибка проверки аутентификации:', error);
-            window.location.replace('https://rswbiogroup.github.io/data-links-page/login.html');
         });
+
+        function loadData() {
+            onValue(dbRef, (snapshot) => {
+                const table = document.getElementById('dataTable');
+                table.innerHTML = '';
+                snapshot.forEach((childSnapshot) => {
+                    const data = childSnapshot.val();
+                    table.innerHTML += `<tr>
+                        <td>${data.name}</td>
+                        <td><a href="${data.archive}" target="_blank">Скачать</a></td>
+                        <td><a href="${data.online}" target="_blank">Просмотр</a></td>
+                        <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
+                    </tr>`;
+                });
+            }, (error) => {
+                alert('Ошибка загрузки данных: ' + error.message);
+            });
+        }
 
         window.addRow = function() {
             const name = document.getElementById('infoName').value;
@@ -76,22 +91,6 @@
             }
             push(dbRef, { name, archive, online });
         }
-
-        onValue(dbRef, (snapshot) => {
-            const table = document.getElementById('dataTable');
-            table.innerHTML = '';
-            snapshot.forEach((childSnapshot) => {
-                const data = childSnapshot.val();
-                table.innerHTML += `<tr>
-                    <td>${data.name}</td>
-                    <td><a href="${data.archive}" target="_blank">Скачать</a></td>
-                    <td><a href="${data.online}" target="_blank">Просмотр</a></td>
-                    <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
-                </tr>`;
-            });
-        }, (error) => {
-            alert('Ошибка загрузки данных: ' + error.message);
-        });
 
         window.deleteRow = function(key) {
             remove(ref(db, 'data/' + key));
@@ -105,7 +104,7 @@
             }).then((result) => {
                 if (result.isConfirmed) {
                     signOut(auth).then(() => {
-                        window.location.replace('https://rswbiogroup.github.io/data-links-page/login.html');
+                        window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
                     }).catch((error) => {
                         alert('Ошибка при выходе: ' + error.message);
                     });
