@@ -18,6 +18,7 @@
     <input type="text" id="archiveLink" placeholder="Ссылка на архив">
     <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
     <button onclick="addRow()">Добавить</button>
+    <button onclick="logout()">Выйти</button>
     
     <table>
         <thead>
@@ -34,6 +35,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
@@ -48,6 +50,7 @@
 
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
+        const auth = getAuth(app);
         const dbRef = ref(db, 'data');
 
         window.addRow = function() {
@@ -77,6 +80,14 @@
 
         window.deleteRow = function(key) {
             remove(ref(db, 'data/' + key));
+        }
+
+        window.logout = function() {
+            signOut(auth).then(() => {
+                window.location.href = 'https://rswbiogroup.github.io/data-links-page/';
+            }).catch((error) => {
+                alert('Ошибка при выходе: ' + error.message);
+            });
         }
     </script>
 </body>
