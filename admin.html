@@ -35,8 +35,9 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 
+        // Конфигурация Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
             authDomain: "docs-3a3de.firebaseapp.com",
@@ -48,11 +49,24 @@
             measurementId: "G-3L1HF1V8SB"
         };
 
+        // Инициализация Firebase
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
         const dbRef = ref(db, 'data');
 
+        // Проверка аутентификации пользователя
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                // Если пользователь не авторизован, перенаправляем на страницу авторизации
+                window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
+            } else {
+                // Если пользователь авторизован, показываем содержимое страницы
+                console.log('Пользователь авторизован:', user.email);
+            }
+        });
+
+        // Функция для добавления строки
         window.addRow = function() {
             const name = document.getElementById('infoName').value;
             const archive = document.getElementById('archiveLink').value;
@@ -64,6 +78,7 @@
             push(dbRef, { name, archive, online });
         }
 
+        // Отображение данных в таблице
         onValue(dbRef, (snapshot) => {
             const table = document.getElementById('dataTable');
             table.innerHTML = '';
@@ -78,13 +93,15 @@
             });
         });
 
+        // Функция для удаления строки
         window.deleteRow = function(key) {
             remove(ref(db, 'data/' + key));
         }
 
+        // Функция для выхода из системы
         window.logout = function() {
             signOut(auth).then(() => {
-                window.location.href = 'https://rswbiogroup.github.io/data-links-page/';
+                window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
             }).catch((error) => {
                 alert('Ошибка при выходе: ' + error.message);
             });
