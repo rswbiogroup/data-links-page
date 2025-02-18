@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Маълумотлар</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid black; padding: 10px; }
+        th { background-color: #f2f2f2; }
+    </style>
+    <script type="module">
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js';
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js';
+        import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js';
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
+            authDomain: "docs-3a3de.firebaseapp.com",
+            databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "docs-3a3de",
+            storageBucket: "docs-3a3de.firebasestorage.app",
+            messagingSenderId: "852859489033",
+            appId: "1:852859489033:web:f22190feea785d8e8461d8",
+            measurementId: "G-3L1HF1V8SB"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getDatabase(app);
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const loginForm = document.createElement('form');
+            loginForm.innerHTML = `
+                <h2>Вход</h2>
+                <input type="email" id="email" placeholder="Email" required><br>
+                <input type="password" id="password" placeholder="Пароль" required><br>
+                <button type="submit">Войти</button>
+            `;
+            document.body.prepend(loginForm);
+
+            loginForm.addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+
+                signInWithEmailAndPassword(auth, email, password)
+                    .then(() => { window.location.reload(); })
+                    .catch((error) => { alert('Ошибка входа: ' + error.message); });
+            });
+
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    loadTable();
+                }
+            });
+
+            function loadTable() {
+                const table = document.getElementById('dataTable');
+                table.innerHTML = '';
+                const dataRef = ref(db, 'data');
+                onValue(dataRef, (snapshot) => {
+                    snapshot.forEach((childSnapshot) => {
+                        const item = childSnapshot.val();
+                        const row = `
+                            <tr>
+                                <td>${item.name}</td>
+                                <td><a href="${item.archive}" target="_blank">Скачать</a></td>
+                                <td><a href="${item.online}" target="_blank">Просмотр</a></td>
+                            </tr>`;
+                        table.innerHTML += row;
+                    });
+                });
+            }
+        });
+    </script>
+</head>
+<body>
+    <h2>Маълумотлар</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Маълумотлар номланиши</th>
+                <th>Архив (скачать)</th>
+                <th>Онлайн просмотр</th>
+            </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+    </table>
+</body>
+</html>
