@@ -36,9 +36,18 @@
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
-        import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
 
-        const firebaseConfig = { /* ...Firebase config... */ };
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
+            authDomain: "docs-3a3de.firebaseapp.com",
+            databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "docs-3a3de",
+            storageBucket: "docs-3a3de.firebasestorage.app",
+            messagingSenderId: "852859489033",
+            appId: "1:852859489033:web:f22190feea785d8e8461d8",
+            measurementId: "G-3L1HF1V8SB"
+        };
+
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
