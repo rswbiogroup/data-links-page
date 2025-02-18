@@ -34,39 +34,47 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
+        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 
-        const firebaseConfig = { /* ваш конфиг */ };
+        const firebaseConfig = {
+            apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
+            authDomain: "docs-3a3de.firebaseapp.com",
+            databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "docs-3a3de",
+            storageBucket: "docs-3a3de.firebasestorage.app",
+            messagingSenderId: "852859489033",
+            appId: "1:852859489033:web:f22190feea785d8e8461d8",
+            measurementId: "G-3L1HF1V8SB"
+        };
+
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getDatabase(app);
+        const auth = getAuth(app);
         const dbRef = ref(db, 'data');
 
-        let logoutTimer;
-
-        function resetLogoutTimer() {
-            clearTimeout(logoutTimer);
-            logoutTimer = setTimeout(() => { signOut(auth); }, 600000); // 10 минут
-        }
-
-        document.addEventListener('mousemove', resetLogoutTimer);
-        document.addEventListener('keydown', resetLogoutTimer);
-        resetLogoutTimer();
-
-        window.logout = function() {
-            signOut(auth).then(() => { window.location.reload(); });
-        }
-
-        onAuthStateChanged(auth, (user) => {
-            if (!user) {
-                window.location.href = 'login.html';
-            }
-        });
-
-        window.addRow = function() { /* ваш код добавления данных */ };
+        window.addRow = function() { /* код добавления данных */ };
         onValue(dbRef, (snapshot) => { /* код отображения данных */ });
         window.deleteRow = function(key) { /* код удаления данных */ };
+
+        // Функция выхода
+        window.logout = function() {
+            signOut(auth).then(() => {
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                alert('Ошибка выхода: ' + error.message);
+            });
+        };
+
+        // Автоматический выход при бездействии
+        let timeout;
+        function resetTimer() {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => logout(), 300000); // 5 минут
+        }
+        window.onload = resetTimer;
+        document.onmousemove = resetTimer;
+        document.onkeypress = resetTimer;
     </script>
 </body>
 </html>
