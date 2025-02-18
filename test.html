@@ -121,7 +121,7 @@
 
         document.getElementById('addRowButton').addEventListener('click', addRow);
         document.getElementById('logoutButton').addEventListener('click', () => {
-            signOut(auth).then(() => window.location.href = '/').catch(err => alert('Ошибка: ' + err.message));
+            signOut(auth).then(() => window.location.href = 'login.html').catch(err => alert('Ошибка: ' + err.message));
         });
 
         window.editRow = editRow;
