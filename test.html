@@ -157,7 +157,7 @@
 
         document.getElementById('addRowButton').addEventListener('click', addRow);
         document.getElementById('logoutButton').addEventListener('click', () => {
-            signOut(auth).then(() => window.location.href = 'login.html').catch(err => Swal.fire('Ошибка', err.message, 'error'));
+            signOut(auth).then(() => window.location.href = '/').catch(err => Swal.fire('Ошибка', err.message, 'error'));
         });
 
         document.getElementById('themeToggle').addEventListener('click', () => {
