@@ -70,6 +70,9 @@
                 return;
             }
             push(dbRef, { name, archive, online });
+            document.getElementById('infoName').value = '';
+            document.getElementById('archiveLink').value = '';
+            document.getElementById('onlineLink').value = '';
         }
 
         onValue(dbRef, (snapshot) => {
@@ -100,3 +103,4 @@
     </script>
 </body>
 </html>
+
