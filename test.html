@@ -29,6 +29,7 @@
     import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js';
     import { getAuth, signInWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js';
 
+    // Конфигурация Firebase
     const firebaseConfig = {
       apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
       authDomain: "docs-3a3de.firebaseapp.com",
@@ -40,22 +41,33 @@
       measurementId: "G-3L1HF1V8SB"
     };
 
+    // Инициализация Firebase
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
+    // Получаем элементы формы и сообщения об ошибке
     const form = document.getElementById('login-form');
     const errorMessage = document.getElementById('error-message');
 
+    // Обработчик отправки формы
     form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+      e.preventDefault(); // Предотвращаем стандартное поведение формы
+
+      // Получаем email и пароль из формы
       const email = document.getElementById('email').value;
       const password = document.getElementById('password').value;
 
       try {
-        await signInWithEmailAndPassword(auth, email, password);
-        window.location.assign('https://rswbiogroup.github.io/data-links-page/admin.html');
+        // Пытаемся авторизовать пользователя
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log('User logged in:', userCredential.user);
+
+        // Перенаправляем пользователя на нужную страницу
+        window.location.href = 'https://rswbiogroup.github.io/data-links-page/admin.html';
       } catch (error) {
+        // Если произошла ошибка, выводим сообщение
         errorMessage.textContent = error.message;
+        console.error('Login error:', error.message);
       }
     });
   </script>
