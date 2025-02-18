@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Административная панель</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
+        body { font-family: Arial, sans-serif; text-align: center; display: none; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid black; padding: 10px; }
         th { background-color: #f2f2f2; }
@@ -35,7 +35,8 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
         import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import Swal from 'https://cdn.jsdelivr.net/npm/sweetalert2@11';
 
         const firebaseConfig = {
             apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
@@ -52,6 +53,14 @@
         const db = getDatabase(app);
         const auth = getAuth(app);
         const dbRef = ref(db, 'data');
+
+        onAuthStateChanged(auth, (user) => {
+            if (!user) {
+                window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
+            } else {
+                document.body.style.display = 'block';
+            }
+        });
 
         window.addRow = function() {
             const name = document.getElementById('infoName').value;
@@ -76,6 +85,8 @@
                     <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
                 </tr>`;
             });
+        }, (error) => {
+            alert('Ошибка загрузки данных: ' + error.message);
         });
 
         window.deleteRow = function(key) {
@@ -83,10 +94,18 @@
         }
 
         window.logout = function() {
-            signOut(auth).then(() => {
-                window.location.href = 'https://rswbiogroup.github.io/data-links-page/';
-            }).catch((error) => {
-                alert('Ошибка при выходе: ' + error.message);
+            Swal.fire({
+                title: 'Вы действительно хотите выйти?',
+                showCancelButton: true,
+                confirmButtonText: 'Выйти',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    signOut(auth).then(() => {
+                        window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
+                    }).catch((error) => {
+                        alert('Ошибка при выходе: ' + error.message);
+                    });
+                }
             });
         }
     </script>
