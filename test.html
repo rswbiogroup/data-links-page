@@ -1,30 +1,38 @@
 <!DOCTYPE html>
-<html lang="uz">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Административная панель</title>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid black; padding: 10px; }
-        th { background-color: #f2f2f2; }
-        input, button { margin: 10px; padding: 5px; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script type="module" src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
 </head>
-<body>
-    <h2>Вход в административную панель</h2>
-    <input type="email" id="email" placeholder="Почта"><br>
-    <input type="password" id="password" placeholder="Пароль"><br>
-    <button id="loginBtn">Войти</button>
+<body class="flex items-center justify-center min-h-screen bg-gray-100">
+  <div class="w-full max-w-sm bg-white p-8 rounded-lg shadow-md">
+    <h2 class="text-2xl font-bold text-center mb-6">Login</h2>
+    <form id="login-form" class="space-y-4">
+      <div>
+        <label class="block mb-1 text-gray-600">Email</label>
+        <input type="email" id="email" required class="w-full px-4 py-2 border rounded-lg" />
+      </div>
+      <div>
+        <label class="block mb-1 text-gray-600">Password</label>
+        <input type="password" id="password" required class="w-full px-4 py-2 border rounded-lg" />
+      </div>
+      <button type="submit" class="w-full bg-blue-500 text-white py-2 rounded-lg hover:bg-blue-600">Login</button>
+    </form>
+    <p id="error-message" class="text-red-500 text-center mt-4"></p>
+  </div>
 
-    <script type="module">
+  <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
             authDomain: "docs-3a3de.firebaseapp.com",
+            databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "docs-3a3de",
             storageBucket: "docs-3a3de.firebasestorage.app",
             messagingSenderId: "852859489033",
@@ -32,20 +40,24 @@
             measurementId: "G-3L1HF1V8SB"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-        document.getElementById('loginBtn').addEventListener('click', () => {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            signInWithEmailAndPassword(auth, email, password)
-                .then(() => {
-                    window.location.href = '/admin.html';
-                })
-                .catch((error) => {
-                    alert('Ошибка входа: ' + error.message);
-                });
-        });
-    </script>
+    const form = document.getElementById('login-form');
+    const errorMessage = document.getElementById('error-message');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+
+      try {
+        await signInWithEmailAndPassword(auth, email, password);
+        window.location.href = '/admin.html';
+      } catch (error) {
+        errorMessage.textContent = error.message;
+      }
+    });
+  </script>
 </body>
 </html>
