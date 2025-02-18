@@ -19,7 +19,7 @@
     <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
     <button onclick="addRow()">Добавить</button>
     <button onclick="logout()">Выйти</button>
-
+    
     <table>
         <thead>
             <tr>
@@ -51,15 +51,15 @@
         const app = initializeApp(firebaseConfig);
         const db = getDatabase(app);
         const auth = getAuth(app);
+        const dbRef = ref(db, 'data');
 
-        // Проверка аутентификации
+        // Проверка авторизации при загрузке страницы
         onAuthStateChanged(auth, (user) => {
             if (!user) {
+                // Если пользователь не авторизован, перенаправляем на страницу авторизации
                 window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
             }
         });
-
-        const dbRef = ref(db, 'data');
 
         window.addRow = function() {
             const name = document.getElementById('infoName').value;
