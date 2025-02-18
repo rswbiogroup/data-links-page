@@ -3,17 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Маълумотлар</title>
+    <title>Административная панель</title>
     <style>
         body { font-family: Arial, sans-serif; text-align: center; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid black; padding: 10px; }
         th { background-color: #f2f2f2; }
+        input, button { margin: 10px; padding: 5px; }
     </style>
+</head>
+<body>
+    <h2>Административная панель</h2>
+    <input type="text" id="infoName" placeholder="Маълумот номи">
+    <input type="text" id="archiveLink" placeholder="Ссылка на архив">
+    <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
+    <button onclick="addRow()">Добавить</button>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>Маълумотлар номланиши</th>
+                <th>Архив (скачать)</th>
+                <th>Онлайн просмотр</th>
+                <th>Действие</th>
+            </tr>
+        </thead>
+        <tbody id="dataTable"></tbody>
+    </table>
+
     <script type="module">
-        import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js';
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js';
-        import { getDatabase, ref, onValue } from 'https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js';
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
@@ -27,66 +47,37 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
         const db = getDatabase(app);
+        const dbRef = ref(db, 'data');
 
-        document.addEventListener('DOMContentLoaded', () => {
-            const loginForm = document.createElement('form');
-            loginForm.innerHTML = `
-                <h2>Вход</h2>
-                <input type="email" id="email" placeholder="Email" required><br>
-                <input type="password" id="password" placeholder="Пароль" required><br>
-                <button type="submit">Войти</button>
-            `;
-            document.body.prepend(loginForm);
-
-            loginForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const email = document.getElementById('email').value;
-                const password = document.getElementById('password').value;
-
-                signInWithEmailAndPassword(auth, email, password)
-                    .then(() => { window.location.reload(); })
-                    .catch((error) => { alert('Ошибка входа: ' + error.message); });
-            });
-
-            onAuthStateChanged(auth, (user) => {
-                if (user) {
-                    loadTable();
-                }
-            });
-
-            function loadTable() {
-                const table = document.getElementById('dataTable');
-                table.innerHTML = '';
-                const dataRef = ref(db, 'data');
-                onValue(dataRef, (snapshot) => {
-                    snapshot.forEach((childSnapshot) => {
-                        const item = childSnapshot.val();
-                        const row = `
-                            <tr>
-                                <td>${item.name}</td>
-                                <td><a href="${item.archive}" target="_blank">Скачать</a></td>
-                                <td><a href="${item.online}" target="_blank">Просмотр</a></td>
-                            </tr>`;
-                        table.innerHTML += row;
-                    });
-                });
+        window.addRow = function() {
+            const name = document.getElementById('infoName').value;
+            const archive = document.getElementById('archiveLink').value;
+            const online = document.getElementById('onlineLink').value;
+            if (!name || !archive || !online) {
+                alert('Заполните все поля!');
+                return;
             }
+            push(dbRef, { name, archive, online });
+        }
+
+        onValue(dbRef, (snapshot) => {
+            const table = document.getElementById('dataTable');
+            table.innerHTML = '';
+            snapshot.forEach((childSnapshot) => {
+                const data = childSnapshot.val();
+                table.innerHTML += `<tr>
+                    <td>${data.name}</td>
+                    <td><a href="${data.archive}" target="_blank">Скачать</a></td>
+                    <td><a href="${data.online}" target="_blank">Просмотр</a></td>
+                    <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
+                </tr>`;
+            });
         });
+
+        window.deleteRow = function(key) {
+            remove(ref(db, 'data/' + key));
+        }
     </script>
-</head>
-<body>
-    <h2>Маълумотлар</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Маълумотлар номланиши</th>
-                <th>Архив (скачать)</th>
-                <th>Онлайн просмотр</th>
-            </tr>
-        </thead>
-        <tbody id="dataTable"></tbody>
-    </table>
 </body>
 </html>
