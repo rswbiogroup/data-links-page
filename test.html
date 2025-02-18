@@ -65,7 +65,7 @@
         const dbRef = ref(db, 'data');
 
         onAuthStateChanged(auth, (user) => {
-            if (!user) window.location.href = 'login.html';
+            if (!user) window.location.href = 'https://rswbiogroup.github.io/data-links-page/'; // Перенаправление на главную страницу
             else document.body.style.display = 'block';
         });
 
@@ -157,7 +157,11 @@
 
         document.getElementById('addRowButton').addEventListener('click', addRow);
         document.getElementById('logoutButton').addEventListener('click', () => {
-            signOut(auth).then(() => window.location.href = 'index.html').catch(err => Swal.fire('Ошибка', err.message, 'error'));
+            signOut(auth).then(() => {
+                window.location.href = 'https://rswbiogroup.github.io/data-links-page/'; // Перенаправление на главную страницу
+            }).catch(err => {
+                Swal.fire('Ошибка', err.message, 'error');
+            });
         });
 
         document.getElementById('themeToggle').addEventListener('click', () => {
