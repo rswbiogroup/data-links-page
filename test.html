@@ -53,7 +53,7 @@
 
       try {
         await signInWithEmailAndPassword(auth, email, password);
-        window.location.href = 'https://rswbiogroup.github.io/data-links-page/admin.html';
+        window.location.assign('https://rswbiogroup.github.io/data-links-page/admin.html');
       } catch (error) {
         errorMessage.textContent = error.message;
       }
