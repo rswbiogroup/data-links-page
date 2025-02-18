@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Административная панель</title>
     <style>
-        body { font-family: Arial, sans-serif; text-align: center; }
+        body { font-family: Arial, sans-serif; text-align: center; display: none; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
         th, td { border: 1px solid black; padding: 10px; }
         th { background-color: #f2f2f2; }
@@ -53,11 +53,11 @@
         const auth = getAuth(app);
         const dbRef = ref(db, 'data');
 
-        // Проверка авторизации при загрузке страницы
         onAuthStateChanged(auth, (user) => {
             if (!user) {
-                // Если пользователь не авторизован, перенаправляем на страницу авторизации
                 window.location.href = 'https://rswbiogroup.github.io/data-links-page/login.html';
+            } else {
+                document.body.style.display = 'block';
             }
         });
 
