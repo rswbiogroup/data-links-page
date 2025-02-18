@@ -34,76 +34,39 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
         import { getAuth, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",  // замените на свои данные
-            authDomain: "docs-3a3de.firebaseapp.com",
-            databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "docs-3a3de",
-            storageBucket: "docs-3a3de.firebasestorage.app",
-            messagingSenderId: "852859489033",
-            appId: "1:852859489033:web:f22190feea785d8e8461d8",
-            measurementId: "G-3L1HF1V8SB"
-        };
-
+        const firebaseConfig = { /* ваш конфиг */ };
         const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
         const db = getDatabase(app);
         const dbRef = ref(db, 'data');
-        const auth = getAuth();
 
-        let inactivityTimer;
+        let logoutTimer;
 
-        function resetTimer() {
-            clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(() => logout(), 600000); // 10 минут
+        function resetLogoutTimer() {
+            clearTimeout(logoutTimer);
+            logoutTimer = setTimeout(() => { signOut(auth); }, 600000); // 10 минут
         }
 
-        window.addEventListener('mousemove', resetTimer);
-        window.addEventListener('keydown', resetTimer);
+        document.addEventListener('mousemove', resetLogoutTimer);
+        document.addEventListener('keydown', resetLogoutTimer);
+        resetLogoutTimer();
 
         window.logout = function() {
-            signOut(auth).then(() => {
-                window.location.href = 'login.html';
-            });
+            signOut(auth).then(() => { window.location.reload(); });
         }
 
-        onAuthStateChanged(auth, user => {
+        onAuthStateChanged(auth, (user) => {
             if (!user) {
                 window.location.href = 'login.html';
             }
         });
 
-        window.addRow = function() {
-            const name = document.getElementById('infoName').value;
-            const archive = document.getElementById('archiveLink').value;
-            const online = document.getElementById('onlineLink').value;
-            if (!name || !archive || !online) {
-                alert('Заполните все поля!');
-                return;
-            }
-            push(dbRef, { name, archive, online });
-        }
-
-        onValue(dbRef, (snapshot) => {
-            const table = document.getElementById('dataTable');
-            table.innerHTML = '';
-            snapshot.forEach((childSnapshot) => {
-                const data = childSnapshot.val();
-                table.innerHTML += `<tr>
-                    <td>${data.name}</td>
-                    <td><a href="${data.archive}" target="_blank">Скачать</a></td>
-                    <td><a href="${data.online}" target="_blank">Просмотр</a></td>
-                    <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
-                </tr>`;
-            });
-        });
-
-        window.deleteRow = function(key) {
-            remove(ref(db, 'data/' + key));
-        }
-
+        window.addRow = function() { /* ваш код добавления данных */ };
+        onValue(dbRef, (snapshot) => { /* код отображения данных */ });
+        window.deleteRow = function(key) { /* код удаления данных */ };
     </script>
 </body>
 </html>
