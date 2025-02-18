@@ -10,48 +10,21 @@
         th, td { border: 1px solid black; padding: 10px; }
         th { background-color: #f2f2f2; }
         input, button { margin: 10px; padding: 5px; }
-        .auth-form { margin-top: 20px; }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
-    <div id="authForm" class="auth-form">
-        <h2>Авторизация</h2>
-        <input type="email" id="email" placeholder="Электронная почта">
-        <input type="password" id="password" placeholder="Пароль">
-        <button onclick="login()">Войти</button>
-    </div>
-
-    <div id="adminPanel" class="hidden">
-        <h2>Административная панель</h2>
-        <button onclick="logout()" style="float: right;">Выход</button>
-        <input type="text" id="infoName" placeholder="Маълумот номи">
-        <input type="text" id="archiveLink" placeholder="Ссылка на архив">
-        <input type="text" id="onlineLink" placeholder="Ссылка на онлайн просмотр">
-        <button onclick="addRow()">Добавить</button>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>Маълумотлар номланиши</th>
-                    <th>Архив (скачать)</th>
-                    <th>Онлайн просмотр</th>
-                    <th>Действие</th>
-                </tr>
-            </thead>
-            <tbody id="dataTable"></tbody>
-        </table>
-    </div>
+    <h2>Вход в административную панель</h2>
+    <input type="email" id="email" placeholder="Почта"><br>
+    <input type="password" id="password" placeholder="Пароль"><br>
+    <button id="loginBtn">Войти</button>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-database.js";
-        import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAMrlpJYT5VL9w0Uh-zLA7bb0E25vzUorA",
             authDomain: "docs-3a3de.firebaseapp.com",
-            databaseURL: "https://docs-3a3de-default-rtdb.europe-west1.firebasedatabase.app",
             projectId: "docs-3a3de",
             storageBucket: "docs-3a3de.firebasestorage.app",
             messagingSenderId: "852859489033",
@@ -60,61 +33,19 @@
         };
 
         const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
         const auth = getAuth(app);
-        const dbRef = ref(db, 'data');
 
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                document.getElementById('authForm').classList.add('hidden');
-                document.getElementById('adminPanel').classList.remove('hidden');
-            } else {
-                document.getElementById('authForm').classList.remove('hidden');
-                document.getElementById('adminPanel').classList.add('hidden');
-            }
-        });
-
-        window.login = function() {
+        document.getElementById('loginBtn').addEventListener('click', () => {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
             signInWithEmailAndPassword(auth, email, password)
+                .then(() => {
+                    window.location.href = '/admin.html';
+                })
                 .catch((error) => {
-                    alert('Ошибка авторизации: ' + error.message);
+                    alert('Ошибка входа: ' + error.message);
                 });
-        }
-
-        window.logout = function() {
-            signOut(auth);
-        }
-
-        window.addRow = function() {
-            const name = document.getElementById('infoName').value;
-            const archive = document.getElementById('archiveLink').value;
-            const online = document.getElementById('onlineLink').value;
-            if (!name || !archive || !online) {
-                alert('Заполните все поля!');
-                return;
-            }
-            push(dbRef, { name, archive, online });
-        }
-
-        onValue(dbRef, (snapshot) => {
-            const table = document.getElementById('dataTable');
-            table.innerHTML = '';
-            snapshot.forEach((childSnapshot) => {
-                const data = childSnapshot.val();
-                table.innerHTML += `<tr>
-                    <td>${data.name}</td>
-                    <td><a href="${data.archive}" target="_blank">Скачать</a></td>
-                    <td><a href="${data.online}" target="_blank">Просмотр</a></td>
-                    <td><button onclick="deleteRow('${childSnapshot.key}')">Удалить</button></td>
-                </tr>`;
-            });
         });
-
-        window.deleteRow = function(key) {
-            remove(ref(db, 'data/' + key));
-        }
     </script>
 </body>
 </html>
